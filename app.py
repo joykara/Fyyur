@@ -38,8 +38,8 @@ from model import *
 # Filters.
 #----------------------------------------------------------------------------#
 
-def format_datetime(value, format='medium'):
-  date = dateutil.parser.parse(value)
+def format_datetime(data, format='medium'):
+  date = dateutil.parser.parse(data)
   if format == 'full':
       format="EEEE MMMM, d, y 'at' h:mma"
   elif format == 'medium':
@@ -65,37 +65,37 @@ def index():
 @app.route('/venues')
 def venues():
 
-  value = []
+  data = []
   venues = db.session.query(Venue.city,Venue.state).group_by(
     Venue.city, Venue.state).all()
 
   for area in venues:
     venues = db.session.query(Venue.id,Venue.name,
       Venue.upcoming_shows_count).filter(Venue.city==area[0],Venue.state==area[1]).all()
-    value.append({
+    data.append({
         "city": area[0],
         "state": area[1],
         "venues": venues
         })
-  return render_template('pages/venues.html', areas=value)
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
 
-  value_returned = Venue.query.filter(Venue.name.ilike('%{}%'.format(request.form['search_term']))).all()
+  data_returned = Venue.query.filter(Venue.name.ilike('%{}%'.format(request.form['search_term']))).all()
 
   response={
-    "count": len(value_returned),
-    "value": []
+    "count": len(data_returned),
+    "data": []
     }
-  for venue in value_returned:
-    response["value"].append({
+  for venue in data_returned:
+    response["data"].append({
         "id": venue.id,
         "name": venue.name,
         "num_upcoming_shows": venue.upcoming_shows_count
     })
 
-  return render_template('pages/search_venues.html', value_returned=response, search_term=request.form.get('search_term', ''))
+  return render_template('pages/search_venues.html', data_returned=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -119,7 +119,7 @@ def show_venue(venue_id):
     else:
       past_shows.append(show_data)
 
-  value={
+  data={
     "id": venue.id,
     "name": venue.name,
     "genres": venue.genres.split(','),
@@ -138,7 +138,7 @@ def show_venue(venue_id):
     "upcoming_shows_count": len(upcoming_shows)
   }
 
-  return render_template('pages/show_venue.html', venue=value)
+  return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -151,31 +151,31 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form value as a new Venue record in the db, instead modify value to be the value object returned from db insertion
+  # TODO: insert form data as a new Venue record in the db, instead modify data to be the data object returned from db insertion
   form = VenueForm(request.form)
 
   venue = Venue(
-    name = form.name.value,
-    genres = form.genres.value,
-    address = form.address.value,
-    city = form.city.value,
-    state = form.state.value,
-    phone = form.phone.value,
-    facebook_link = form.facebook_link.value,
-    seeking_talent = form.seeking_talent.value,
-    seeking_description = form.seeking_description.value,
-    image_link = form.image_link.value
+    name = form.name.data,
+    genres = form.genres.data,
+    address = form.address.data,
+    city = form.city.data,
+    state = form.state.data,
+    phone = form.phone.data,
+    facebook_link = form.facebook_link.data,
+    seeking_talent = form.seeking_talent.data,
+    seeking_description = form.seeking_description.data,
+    image_link = form.image_link.data
   )
   try:
         db.session.add(venue)
         db.session.commit()
         # on successful db insert, flash success
-        flash('Venue ' + form.name.value + ' was successfully listed!')
+        flash('Venue ' + form.name.data + ' was successfully listed!')
 
   except:
         db.session.rollback()
         # TODO: on unsuccessful db insert, flash an e
-        flash('An error occurred. Venue ' + form.name.value + ' could not be listed.')
+        flash('An error occurred. Venue ' + form.name.data + ' could not be listed.')
 
   finally:
         db.session.close()
@@ -206,29 +206,29 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-  # TODO: replace with real value returned from querying the database
-  value=db.session.query(Artist.id, Artist.name).all()
+  # TODO: replace with real data returned from querying the database
+  data=db.session.query(Artist.id, Artist.name).all()
 
-  return render_template('pages/artists.html', artists=value)
+  return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
 
-  value_returned = Artist.query.filter(Artist.name.ilike('%{}%'.format(request.form['search_term']))).all()
+  data_returned = Artist.query.filter(Artist.name.ilike('%{}%'.format(request.form['search_term']))).all()
 
   response={
-    "count": len(value_returned),
-    "value": []
+    "count": len(data_returned),
+    "data": []
   }
-  for artist in value_returned:
-    response['value'].append({
+  for artist in data_returned:
+    response['data'].append({
       "id": artist.id,
       "name": artist.name,
       "num_upcoming_shows": artist.upcoming_shows_count,
       })
 
-  return render_template('pages/search_artists.html', value_returned=response, search_term=request.form.get('search_term', ''))
+  return render_template('pages/search_artists.html', data_returned=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
@@ -255,7 +255,7 @@ def show_artist(artist_id):
     else:
       past_shows.append(show_info)
 
-  value = {
+  data = {
     "id": artist.id,
     "name": artist.name,
     "genres": artist.genres.split(','),
@@ -272,7 +272,7 @@ def show_artist(artist_id):
     "past_shows_count": len(past_shows),
     "upcoming_shows_count": len(upcoming_shows)
   }
-  return render_template('pages/show_artist.html', artist=value)
+  return render_template('pages/show_artist.html', artist=data)
 
 #  Update
 #  ----------------------------------------------------------------
@@ -288,7 +288,7 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-  # TODO: take values from the form submitted, and update existing
+  # TODO: take datas from the form submitted, and update existing
 
   artist = Artist.query.get(artist_id)
   artist.name = request.form['name']
@@ -303,7 +303,7 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-  # TODO: populate form with values from venue with ID <venue_id>
+  # TODO: populate form with datas from venue with ID <venue_id>
 
   form = VenueForm()
   venue = db.session.query(Venue).filter(Venue.id == venue_id).one()
@@ -312,7 +312,7 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-  # TODO: take values from the form submitted, and update existing
+  # TODO: take datas from the form submitted, and update existing
 
    venue = Venue.query.get(venue_id)
    venue.name = request.form['name']
@@ -338,20 +338,20 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
-  # TODO: insert form value as a new Venue record in the db, instead. modify value to be the value object returned from db insertion
+  # TODO: insert form data as a new Venue record in the db, instead. modify data to be the data object returned from db insertion
   form = ArtistForm(request.form)
 
   artist = Artist(
-    name = form.name.value,
-    genres = form.genres.value,
-    address = form.address.value,
-    city = form.city.value,
-    state = form.state.value,
-    phone = form.phone.value,
-    facebook_link = form.facebook_link.value,
-    seeking_talent = form.seeking_talent.value,
-    seeking_description = form.seeking_description.value,
-    image_link = form.image_link.value
+    name = form.name.data,
+    genres = form.genres.data,
+    city = form.city.data,
+    state = form.state.data,
+    phone = form.phone.data,
+    facebook_link = form.facebook_link.data,
+    website_link = form.website_link.data,
+    seeking_venue = form.seeking_venue.data,
+    seeking_description = form.seeking_description.data,
+    image_link = form.image_link.data
   )
   try:
     db.session.add(artist)
@@ -376,11 +376,11 @@ def create_artist_submission():
 def shows():
   # displays list of shows at /shows
 
-  value = []
+  data = []
   shows = Show.query.all()
 
   for show in shows:
-      value.append({
+      data.append({
       "venue_id": show.venue_id,
       "venue_name": show.venue.name,
       "artist_id": show.artist_id,
@@ -389,7 +389,7 @@ def shows():
       "start_time": str(show.start_time)
       })
 
-  return render_template('pages/shows.html', shows=value)
+  return render_template('pages/shows.html', shows=data)
 
 @app.route('/shows/create')
 def create_shows():
