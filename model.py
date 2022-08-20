@@ -1,9 +1,6 @@
-
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
-from flask_moment import Moment
+from email.policy import default
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import Form
-from forms import *
 from flask_migrate import Migrate
 
 #----------------------------------------------------------------------------#
@@ -11,14 +8,8 @@ from flask_migrate import Migrate
 #----------------------------------------------------------------------------#
 
 app = Flask(__name__)
-moment = Moment(app)
-app.config.from_object('config')
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 migrate = Migrate(app, db)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1606@localhost:5432/fyyur'
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -40,8 +31,6 @@ class Venue(db.Model):
     website_link = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean,default=False)
     seeking_description = db.Column(db.Text)
-    upcoming_shows_count = db.Column(db.Integer, default=0)
-    past_shows_count = db.Column(db.Integer, default=0)
     shows = db.relationship('Show',backref='venue',lazy=True,cascade="save-update, merge, delete")
 
     def __repr__(self):
@@ -62,8 +51,6 @@ class Artist(db.Model):
     website_link = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean,default=False)
     seeking_description = db.Column(db.Text)
-    upcoming_shows_count = db.Column(db.Integer, default=0)
-    past_shows_count = db.Column(db.Integer, default=0)
     shows = db.relationship('Show',backref='artist',lazy=True,cascade="save-update, merge, delete")
 
     def __repr__(self):
@@ -77,7 +64,7 @@ class Show(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(db.Integer, db.ForeignKey("Artist.id"), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey("Venue.id"), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    start_time = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return f"<Show id={self.id} artist_id={self.artist_id} venue_id={self.venue_id} start_time={self.start_time}"
